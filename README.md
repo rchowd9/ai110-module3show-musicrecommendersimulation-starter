@@ -29,6 +29,17 @@ Some prompts to answer:
 
 You can include a simple diagram or bullet list if helpful.
 
+Markdown
+Real-world recommendation engines like Spotify’s BaRT predict preferences by blending user behavior with track metadata. While streaming giants use massive architectures, they remain vulnerable to the "cold-start problem" for new songs with zero listening history. To bypass this, I implemented a content-based filtering approach in my simulation that maps track attributes directly to a user's explicit profile.
+
+* **Song Features:** Each song in my system uses categorical strings (`genre`, `mood`) and normalized decimal values (`energy`, `tempo_bpm`, `valence`, `danceability`).
+
+* **UserProfile Information:** I store the user's target preferences for those exact same attributes (`preferred_genre`, `preferred_mood`, `target_energy`, etc.).
+
+* **Score Computation:** My `Recommender` computes a score by calculating the absolute mathematical distance between the user’s target values and a song's attributes, subtracting that distance from 1 so closer matches get higher scores.
+
+* **Recommendation Choice:** I apply weights to favor crucial features (like genre over tempo), sort the entire catalog by their final combined scores, and recommend the top-ranked tracks.
+
 ---
 
 ## Getting Started
