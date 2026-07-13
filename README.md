@@ -40,6 +40,46 @@ Real-world recommendation engines like Spotify’s BaRT predict preferences by b
 
 * **Recommendation Choice:** I apply weights to favor crucial features (like genre over tempo), sort the entire catalog by their final combined scores, and recommend the top-ranked tracks.
 
+
+### My Taste Profile Dictionary
+
+I am using this specific profile configuration to test my comparisons:
+
+```python
+user_profile = {
+    "preferred_genre": "synthwave",
+    "preferred_mood": "focused",
+    "target_energy": 0.75,
+    "target_tempo": 0.65,        # Scaled 0.0 - 1.0 equivalent of ~115 BPM
+    "target_valence": 0.50,      # Emotionally neutral / atmospheric
+    "target_danceability": 0.60  # Moderately rhythmic but not distracting
+}
+
+My program uses a multi-step mathematical approach to score each song by evaluating its categorical and numerical distance from the user's taste profile.
+
+1. Categorical Filtering (Exact Match)For text-based features, the rule is binary. 
+
+If a song matches the exact string, it receives a full score for that category; otherwise, it receives zero.Genre Score: If song["genre"] == user_profile["preferred_genre"], the score is 1.0, else 0.0.
+
+Mood Score: If song["mood"] == user_profile["preferred_mood"], the score is 1.0, else 0.0.
+
+2. Numerical Proximity (Absolute Distance)For continuous values, the algorithm calculates how close a song's feature is to the user's target value. To reward closeness rather than simply higher or lower values, I calculate the Absolute Difference and subtract it from 1.0.
+
+Feature Score = 1.0 - |u_target - s_actual|
+
+This logic applies to energy, tempo_bpm, valence, and danceability.
+
+3. Feature Weighting & Ranking (The Final Blend)To give certain features more influence over the recommendations, I multiply each individual score by a pre-defined weight parameter:
+
+Total Score = (2.0 x Genre Score) + (2.0 x Mood Score) + (1.0 x Energy Score) + (1.0 x Tempo Score) + (0.5 x Valence Score) + (0.5 x Danceability Score)
+
+Once every song in the catalog has its Total Score calculated, the ranking rule sorts the collection in descending order and selects the top tracks.
+
+Potential Biases & Limitations
+Because I heavily weighted the categorical matches (setting Genre and Mood multiplier to 2.0), the system naturally creates a bit of an echo chamber. It tends to hyper-focus on exact genre matches, meaning it might completely ignore an incredible rock or ambient track that perfectly nails the user's desired mood, energy, and tempo. Furthermore, since it's entirely content-based, it can't make those unexpected, cross-genre leaps that make you say, "How did it know I'd like this?"—a magic touch that only collaborative filtering can provide by looking at real human behavior.
+
+
+
 ---
 
 ## Getting Started
