@@ -135,16 +135,7 @@ FLOAT_FIELDS = {
 
 
 def load_songs(csv_path: str) -> List[Dict]:
-    """
-    Loads songs from a CSV file into a list of dicts using csv.DictReader.
-
-    Numeric columns are converted from strings to real numbers: ``id`` becomes
-    an int and the audio-feature columns (energy, tempo_bpm, valence,
-    danceability, acousticness, plus optional instrumentalness/speechiness)
-    become floats. Non-numeric columns (title, artist, genre, mood) are left as
-    strings, and blank numeric cells become None.
-    Required by src/main.py
-    """
+    """Load songs from a CSV into a list of dicts, casting id to int and audio features to float."""
     songs: List[Dict] = []
     with open(csv_path, newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
@@ -206,16 +197,7 @@ def _pref(user_prefs: Dict, *keys, default=None):
 
 
 def score_song(user_prefs: Dict, song: Dict) -> Tuple[float, List[str]]:
-    """
-    Score one song (dict) against user preferences (dict) with the custom
-    recipe (see the weight table above) and return (total_score, reasons).
-
-    Categorical matches are case-insensitive flat bonuses; numeric features use
-    graded similarity times a per-feature weight. A numeric feature is skipped
-    if either the profile or the song doesn't define it. Accepts either the
-    "preferred_*/target_*" profile keys or the shorter "genre/mood/energy/..."
-    keys.
-    """
+    """Score a song dict against user prefs via the custom recipe, returning (total_score, reasons)."""
     total_score = 0.0
     reasons: List[str] = []
 
@@ -261,11 +243,7 @@ def score_song(user_prefs: Dict, song: Dict) -> Tuple[float, List[str]]:
 def recommend_songs(
     user_prefs: Dict, songs: List[Dict], k: int = 5
 ) -> List[Tuple[Dict, float, str]]:
-    """
-    Scores every song, sorts by score descending, and returns the top k as
-    (song_dict, score, explanation) tuples.
-    Required by src/main.py
-    """
+    """Score every song and return the top k as (song, score, explanation) tuples, highest first."""
     # Judge every song once: (song, score, reasons_list).
     scored = [(song, *score_song(user_prefs, song)) for song in songs]
 

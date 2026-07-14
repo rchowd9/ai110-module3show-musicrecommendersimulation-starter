@@ -130,6 +130,41 @@ Paste a sample of your recommender's output here as a text block so a reader can
 #   3. ...
 ```
 
+Top 5 picks for a "synthwave / focused" profile
+===============================================
+
+#1  Night Drive Loop (Neon Echo)   score: 4.88
+      - genre match (+2.0)
+      - energy match (+1.00)
+      - tempo match (+0.95)
+      - valence match (+0.49)
+      - danceability match (+0.43)
+
+#2  Focus Flow (LoRoom)   score: 4.25
+      - mood match (+2.0)
+      - energy match (+0.65)
+      - tempo match (+0.65)
+      - valence match (+0.46)
+      - danceability match (+0.50)
+
+#3  Rooftop Lights (Indigo Parade)   score: 2.64
+      - energy match (+0.99)
+      - tempo match (+0.91)
+      - valence match (+0.34)
+      - danceability match (+0.39)
+
+#4  Sunrise City (Neon Echo)   score: 2.63
+      - energy match (+0.93)
+      - tempo match (+0.97)
+      - valence match (+0.33)
+      - danceability match (+0.40)
+
+#5  Concrete Kings (Rhyme Foundry)   score: 2.60
+      - energy match (+0.97)
+      - tempo match (+0.81)
+      - valence match (+0.44)
+      - danceability match (+0.38)
+
 **Screenshot or video** *(optional)*: <!-- Insert a screenshot or demo video link here -->
 
 ---
