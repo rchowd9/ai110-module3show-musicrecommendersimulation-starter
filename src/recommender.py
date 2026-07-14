@@ -1,5 +1,6 @@
 from typing import List, Dict, Tuple, Optional
 from dataclasses import dataclass
+from operator import itemgetter
 import csv
 
 # ---------------------------------------------------------------------------
@@ -122,44 +123,139 @@ class Recommender:
         )
 
 
+# Columns cast to int (whole-number identifiers) vs float (0-1 audio features
+# and BPM). Anything not listed here — title, artist, genre, mood — stays a
+# string. Only columns actually present in the CSV are converted, so optional
+# feature columns (instrumentalness, speechiness) don't create phantom keys.
+INTEGER_FIELDS = {"id"}
+FLOAT_FIELDS = {
+    "energy", "tempo_bpm", "valence", "danceability",
+    "acousticness", "instrumentalness", "speechiness",
+}
+
+
 def load_songs(csv_path: str) -> List[Dict]:
     """
-    Loads songs from a CSV file into a list of dicts, converting the numeric
-    columns to floats. Missing/blank numeric fields become None.
+    Loads songs from a CSV file into a list of dicts using csv.DictReader.
+
+    Numeric columns are converted from strings to real numbers: ``id`` becomes
+    an int and the audio-feature columns (energy, tempo_bpm, valence,
+    danceability, acousticness, plus optional instrumentalness/speechiness)
+    become floats. Non-numeric columns (title, artist, genre, mood) are left as
+    strings, and blank numeric cells become None.
     Required by src/main.py
     """
-    numeric_fields = {
-        "energy", "tempo_bpm", "valence", "danceability",
-        "acousticness", "instrumentalness", "speechiness",
-    }
     songs: List[Dict] = []
     with open(csv_path, newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for row in reader:
-            for field in numeric_fields:
-                value = row.get(field)
+            parsed: Dict = {}
+            for key, value in row.items():
                 if value is None or value == "":
-                    row[field] = None
+                    # preserve the column but flag missing numeric data
+                    parsed[key] = None if key in INTEGER_FIELDS or key in FLOAT_FIELDS else value
+                elif key in INTEGER_FIELDS:
+                    parsed[key] = int(value)
+                elif key in FLOAT_FIELDS:
+                    parsed[key] = float(value)
                 else:
-                    row[field] = float(value)
-            songs.append(row)
+                    parsed[key] = value
+            songs.append(parsed)
     return songs
+
+
+# ---------------------------------------------------------------------------
+# Custom scoring recipe used by the functional score_song() API.
+#
+#   genre match             -> +2.0   (flat categorical bonus)
+#   mood match              -> +2.0   (flat categorical bonus)
+#   energy similarity       -> weight 1.0
+#   tempo similarity        -> weight 1.0
+#   valence similarity      -> weight 0.5
+#   danceability similarity -> weight 0.5
+#
+# Numeric similarity is 1.0 - |preference - attribute| on a 0-1 axis.
+# ---------------------------------------------------------------------------
+RECIPE_GENRE_WEIGHT = 2.0
+RECIPE_MOOD_WEIGHT = 2.0
+NUMERIC_WEIGHTS = {
+    "energy": 1.0,
+    "tempo": 1.0,
+    "valence": 0.5,
+    "danceability": 0.5,
+}
+
+# tempo_bpm is stored raw (beats per minute) but target_tempo is pre-scaled to
+# 0-1, so the song's BPM is scaled onto the same axis before comparison.
+# 50-150 BPM is the range for which the profile's "0.65 == ~115 BPM" holds.
+TEMPO_MIN_BPM = 50.0
+TEMPO_MAX_BPM = 150.0
+
+
+def _similarity(preference: float, attribute: float) -> float:
+    """Graded closeness on a 0-1 axis: 1.0 when equal, lower as they diverge."""
+    return 1.0 - abs(preference - attribute)
+
+
+def _pref(user_prefs: Dict, *keys, default=None):
+    """Return the first present, non-None preference among alternative names."""
+    for key in keys:
+        if user_prefs.get(key) is not None:
+            return user_prefs[key]
+    return default
 
 
 def score_song(user_prefs: Dict, song: Dict) -> Tuple[float, List[str]]:
     """
-    Scores a single song (dict) against user preferences (dict).
-    user_prefs keys: "genre", "mood", "energy".
-    Returns (score, reasons).
+    Score one song (dict) against user preferences (dict) with the custom
+    recipe (see the weight table above) and return (total_score, reasons).
+
+    Categorical matches are case-insensitive flat bonuses; numeric features use
+    graded similarity times a per-feature weight. A numeric feature is skipped
+    if either the profile or the song doesn't define it. Accepts either the
+    "preferred_*/target_*" profile keys or the shorter "genre/mood/energy/..."
+    keys.
     """
-    return _score(
-        user_prefs.get("genre", ""),
-        user_prefs.get("mood", ""),
-        float(user_prefs.get("energy", 0.0)),
-        song.get("genre", ""),
-        song.get("mood", ""),
-        float(song.get("energy") or 0.0),
-    )
+    total_score = 0.0
+    reasons: List[str] = []
+
+    # --- Categorical features ---
+    pref_genre = _pref(user_prefs, "preferred_genre", "genre", default="")
+    if pref_genre and str(song.get("genre", "")).lower() == str(pref_genre).lower():
+        total_score += RECIPE_GENRE_WEIGHT
+        reasons.append("genre match (+2.0)")
+
+    pref_mood = _pref(user_prefs, "preferred_mood", "mood", default="")
+    if pref_mood and str(song.get("mood", "")).lower() == str(pref_mood).lower():
+        total_score += RECIPE_MOOD_WEIGHT
+        reasons.append("mood match (+2.0)")
+
+    # --- Numerical features: energy, tempo, valence, danceability ---
+    # Scale the song's raw BPM onto the same 0-1 axis as target_tempo.
+    song_tempo_scaled = None
+    raw_tempo = song.get("tempo_bpm")
+    if raw_tempo is not None:
+        song_tempo_scaled = (float(raw_tempo) - TEMPO_MIN_BPM) / (TEMPO_MAX_BPM - TEMPO_MIN_BPM)
+        song_tempo_scaled = max(0.0, min(1.0, song_tempo_scaled))  # clamp to 0-1
+
+    numeric_features = {
+        "energy": (_pref(user_prefs, "target_energy", "energy"), song.get("energy")),
+        "tempo": (_pref(user_prefs, "target_tempo", "tempo"), song_tempo_scaled),
+        "valence": (_pref(user_prefs, "target_valence", "valence"), song.get("valence")),
+        "danceability": (
+            _pref(user_prefs, "target_danceability", "danceability"),
+            song.get("danceability"),
+        ),
+    }
+
+    for feature, (preference, attribute) in numeric_features.items():
+        if preference is None or attribute is None:
+            continue  # profile or song doesn't define this feature
+        points = NUMERIC_WEIGHTS[feature] * _similarity(float(preference), float(attribute))
+        total_score += points
+        reasons.append(f"{feature} match (+{points:.2f})")
+
+    return total_score, reasons
 
 
 def recommend_songs(
@@ -170,11 +266,11 @@ def recommend_songs(
     (song_dict, score, explanation) tuples.
     Required by src/main.py
     """
-    scored = []
-    for song in songs:
-        score, reasons = score_song(user_prefs, song)
-        explanation = "; ".join(reasons)
-        scored.append((song, score, explanation))
+    # Judge every song once: (song, score, reasons_list).
+    scored = [(song, *score_song(user_prefs, song)) for song in songs]
 
-    scored.sort(key=lambda item: item[1], reverse=True)
-    return scored[:k]
+    # Rank by score (highest first) and keep the top k.
+    top = sorted(scored, key=itemgetter(1), reverse=True)[:k]
+
+    # Flatten each reasons list into an explanation string for the survivors.
+    return [(song, score, "; ".join(reasons)) for song, score, reasons in top]
