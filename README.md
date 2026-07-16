@@ -29,7 +29,7 @@ Some prompts to answer:
 
 You can include a simple diagram or bullet list if helpful.
 
-Markdown
+
 Real-world recommendation engines like Spotify’s BaRT predict preferences by blending user behavior with track metadata. While streaming giants use massive architectures, they remain vulnerable to the "cold-start problem" for new songs with zero listening history. To bypass this, I implemented a content-based filtering approach in my simulation that maps track attributes directly to a user's explicit profile.
 
 * **Song Features:** Each song in my system uses categorical strings (`genre`, `mood`) and normalized decimal values (`energy`, `tempo_bpm`, `valence`, `danceability`).

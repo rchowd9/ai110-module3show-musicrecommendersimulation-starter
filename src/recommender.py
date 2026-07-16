@@ -207,10 +207,13 @@ def score_song(user_prefs: Dict, song: Dict) -> Tuple[float, List[str]]:
         total_score += RECIPE_GENRE_WEIGHT
         reasons.append("genre match (+2.0)")
 
-    pref_mood = _pref(user_prefs, "preferred_mood", "mood", default="")
-    if pref_mood and str(song.get("mood", "")).lower() == str(pref_mood).lower():
-        total_score += RECIPE_MOOD_WEIGHT
-        reasons.append("mood match (+2.0)")
+    # --- Feature Removal (TEMPORARY): mood check commented out to observe how
+    # rankings shift when the +2.0 mood bonus no longer fires. Restore this block
+    # to re-enable mood matching. ---
+    # pref_mood = _pref(user_prefs, "preferred_mood", "mood", default="")
+    # if pref_mood and str(song.get("mood", "")).lower() == str(pref_mood).lower():
+    #     total_score += RECIPE_MOOD_WEIGHT
+    #     reasons.append("mood match (+2.0)")
 
     # --- Numerical features: energy, tempo, valence, danceability ---
     # Scale the song's raw BPM onto the same 0-1 axis as target_tempo.
