@@ -51,7 +51,7 @@ Prompts:
 - Did you add or remove data  
 - Are there parts of musical taste missing in the dataset  
 
-The simulator runs on a tiny dataset of just 10 individual songs. The catalog features a handful of distinct genres like pop, lofi, rock, synthwave, ambient, and jazz. No extra songs were added or removed from the base starter file. Because the dataset is so small, huge parts of musical taste are missing, including full albums, actual vocals, and cultural trends.
+The simulator runs on a dataset of 19 individual songs. The catalog features a handful of distinct genres like pop, lofi, rock, synthwave, ambient, and jazz. No extra songs were added or removed from the base starter file. Because the dataset is so small, huge parts of musical taste are missing, including full albums, actual vocals, and cultural trends.
 
 ---
 
