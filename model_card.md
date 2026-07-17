@@ -5,6 +5,8 @@
 Give your model a short, descriptive name.  
 Example: **VibeFinder 1.0**  
 
+**MusicSuggestor**
+
 ---
 
 ## 2. Intended Use  
@@ -16,6 +18,8 @@ Prompts:
 - What kind of recommendations does it generate  
 - What assumptions does it make about the user  
 - Is this for real users or classroom exploration  
+
+This model is designed for classroom exploration to show how basic recommendation systems work. It generates a top tracks list for a user by analyzing a static spreadsheet of songs. It assumes the user knows exactly what kind of musical style, mood, and sound settings they want to hear. It is not meant for real, commercial deployment.
 
 ---
 
@@ -32,6 +36,8 @@ Prompts:
 
 Avoid code here. Pretend you are explaining the idea to a friend who does not program.
 
+The model looks at several properties for every single song in the database. It checks text categories like genre and mood, alongside number ratings like energy, tempo, valence, and danceability. It evaluates the user's specific target settings and finds the mathematical difference for each trait. Closer numbers get higher scores, while exact text matches get a large bonus point boost. The model then adds up these scores using custom weights, sorts the list from highest to lowest, and hands the user the best options.
+
 ---
 
 ## 4. Data  
@@ -45,6 +51,8 @@ Prompts:
 - Did you add or remove data  
 - Are there parts of musical taste missing in the dataset  
 
+The simulator runs on a tiny dataset of just 10 individual songs. The catalog features a handful of distinct genres like pop, lofi, rock, synthwave, ambient, and jazz. No extra songs were added or removed from the base starter file. Because the dataset is so small, huge parts of musical taste are missing, including full albums, actual vocals, and cultural trends.
+
 ---
 
 ## 5. Strengths  
@@ -56,6 +64,8 @@ Prompts:
 - User types for which it gives reasonable results  
 - Any patterns you think your scoring captures correctly  
 - Cases where the recommendations matched your intuition  
+
+The system works great for users who have a very clear, rigid idea of what they want to listen to. It does a solid job capturing extreme vibe differences, like separating a fast workout track from a sleepy study beat. The text matching rules ensure that if a song perfectly fits your favorite genre, it will almost always rise to the top of your list.
 
 ---
 
@@ -70,7 +80,7 @@ Prompts:
 - Cases where the system overfits to one preference  
 - Ways the scoring might unintentionally favor some users  
 
-While my recommender works well for direct matches, it has a major blind spot when it comes to variety because of how the dataset is built. With such a tiny catalog, certain genres and moods are heavily underrepresented, which forces the algorithm to overfit to the few options it has. For example, because the system heavily weights exact category matches, a user who prefers a rare genre might get stuck in a repetitive loop of the same one or two songs, even if other tracks in the database fit their exact numerical vibe. Additionally, the scoring logic completely ignores critical musical elements like artist variety, vocals, and lyrics, meaning it can't distinguish between an instrumental study track and a vocal-heavy song as long as their raw energy and tempo values are similar.
+This system has a major blind spot because the dataset is too small. With only ten songs, it forces the computer to recommend the same tracks repeatedly. If you pick a rare genre, you will get stuck in a tiny loop of one or two options. The code also completely ignores vocals, lyrics, and artist names. This means it might mistake an instrumental study track for a loud rock song just because their speed numbers match.
 
 ---
 
@@ -87,27 +97,15 @@ Prompts:
 
 No need for numeric metrics unless you created some.
 
-To make sure the scoring math was actually doing its job, I tested the recommender using three distinct user profiles designed to represent very different listening vibes:
+To check the math, I tested the system with three different profiles: "Study Session," "Gym Hero," and "Sunny Day." I watched to see if changing the preferences actually shifted the track list. 
 
-* **The "Study Session" (Lofi/Focused):** Prefers low-energy, relaxed, and focused instrumental music.
-* **The "Gym Hero" (Synthwave/Intense):** Prefers high-energy, fast-tempo, and intense tracks to workout to.
-* **The "Sunny Day" (Happy Pop):** Prefers high-valence (very happy), high-danceability, medium-energy tracks.
+I was surprised by how easily a heavy gym track could sneak into a happy pop playlist. This happens because the dataset is tiny, so the algorithm has to compromise. If it runs out of pop songs, it picks the gym song because both share high energy numbers.
 
-### What I Looked For & What Surprised Me
-I wanted to make sure that changing a preference actually shifted the recommendations in a logical way, rather than the algorithm just spitting out the same popular songs over and over. 
-
-What surprised me most was how easily a high-energy song (like a gym track) could "steer" its way into a playlist meant for a totally different vibe (like happy pop). In a tiny dataset, if there aren't enough perfect matches, the mathematical "distance" calculation has to compromise. It realizes, "Well, I don't have any happy pop songs left, but this gym track has the exact high energy and high danceability you asked for!" To a human, a heavy synthwave gym track feels completely out of place on a sunny pop playlist, but to the computer, the numbers matched up almost perfectly.
-
-### Profile Comparisons (How the Output Shifted)
-
-To prove the algorithm's math makes sense, here is how the outputs shifted when comparing the profiles:
-
-* **"Gym Hero" vs. "Study Session":** When switching from the Gym profile to the Study profile, the recommendations completely flipped from high-tempo, driving synthwave tracks to slow, ambient, and lofi beats. This makes perfect sense because the absolute distance formula penalized high-energy values, forcing the system to surface tracks with low energy ratings and calm moods.
+* **"Gym Hero" vs. "Study Session":** Switching profiles completely flipped the results from fast synthwave to slow lofi beats. The absolute distance formula correctly penalized high energy when looking for calm tracks.
     
-* **"Gym Hero" vs. "Sunny Day" (Why the Gym song shows up for Happy Pop):** Even though these feel like different vibes, the "Gym Hero" track kept showing up at the bottom of the "Sunny Day" pop recommendations. This happened because both profiles share high target values for energy and danceability. Because my code treats these numerical values as a major part of the score, the math decided the gym song was a "close enough" fit for a happy pop listener, even if the genre didn't match.
+* **"Gym Hero" vs. "Sunny Day":** The gym track appeared at the bottom of the pop playlist because both profiles look for high energy and danceability. The math decided the gym song was close enough, even though the genres did not match.
 
-* **"Sunny Day" vs. "Study Session":** The "Sunny Day" profile heavily favored tracks with high valence (emotional positivity), whereas the "Study Session" profile preferred neutral or lower valence (atmospheric/focused). As a result, the cheerful, high-tempo pop tracks disappeared entirely when switching to the study profile, replaced by quiet, emotionally flat ambient tracks that won't distract you while working.
-
+* **"Sunny Day" vs. "Study Session":** The pop profile wanted happy tracks, while the study profile wanted neutral tracks. Because of this, the bright pop tracks disappeared entirely when switching to the study settings.
 
 
 ---
@@ -123,6 +121,8 @@ Prompts:
 - Improving diversity among the top results  
 - Handling more complex user tastes  
 
+I want to add a filter to stop the same artist from clogging the top results. I would also scale up the database to include thousands of tracks so the formula has better options. Finally, I want to add a rule that injects random surprise genres to keep things interesting.
+
 ---
 
 ## 9. Personal Reflection  
@@ -134,3 +134,7 @@ Prompts:
 - What you learned about recommender systems  
 - Something unexpected or interesting you discovered  
 - How this changed the way you think about music recommendation apps  
+
+Building this project showed me how much data shapes a recommendation engine. I learned that rigid weights can easily lock a user into a boring echo chamber. It completely changed how I view my own music apps because now I see the mathematical trade-offs happening behind my playlists.
+
+My biggest learning moment was discovering how heavily a dataset's size impacts the accuracy of the recommendations. Even when my formulas worked perfectly, the small pool of songs forced the algorithm to make odd trade-offs. Using AI tools helped me write the base code quickly, but I had to double-check how it accessed python dataclasses versus standard dictionaries. I was surprised that basic addition and subtraction could still make the system "feel" like it was reading my mind. If I extended this project, I would add an automatic fallback feature to suggest songs from adjacent genres when an exact match is missing.
