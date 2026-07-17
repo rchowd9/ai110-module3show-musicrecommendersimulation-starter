@@ -177,6 +177,12 @@ Use this section to document the experiments you ran. For example:
 - What happened when you added tempo or valence to the score
 - How did your system behave for different types of users
 
+* **Lowering the Genre Weight:** I changed the genre weight from 2.0 down to 0.5. This stopped the system from hyper-focusing on exact genre matches. As a result, more diverse styles of music started showing up in the top recommendations.
+
+* **Adding Tempo and Valence:** Adding these numbers allowed the system to separate fast, happy songs from slow, sad ones. It made the recommendations feel much more specific to the user's current mood.
+
+* **Testing Different Users:** The system worked great for extreme profiles like a workout fan or a quiet study session. However, it struggled with casual users who wanted a mix of different genres at the same time.
+
 ---
 
 ## Limitations and Risks
@@ -191,6 +197,12 @@ Examples:
 
 You will go deeper on this in your model card.
 
+* **Tiny Catalog:** The system only works on a tiny database of songs[cite: 1]. This forces the algorithm to repeat the same tracks too often.
+
+* **No Lyric Tracking:** The code does not understand lyrics, language, or song meaning. It only looks at raw numbers and basic category tags.
+
+* **Echo Chambers:** The scoring system heavily favors exact genre and mood matches. This can lock a user into a repetitive loop where they never discover new types of music.
+
 ---
 
 ## Reflection
@@ -204,5 +216,6 @@ Write 1 to 2 paragraphs here about what you learned:
 - about how recommenders turn data into predictions
 - about where bias or unfairness could show up in systems like this
 
+Building this project showed me how much data shapes a recommendation engine. I learned that rigid weights can easily lock a user into a boring echo chamber. It completely changed how I view my own music apps because now I see the mathematical trade-offs happening behind my playlists.
 
-
+My biggest learning moment was discovering how heavily a dataset's size impacts the accuracy of the recommendations. Even when my formulas worked perfectly, the small pool of songs forced the algorithm to make odd trade-offs. Using AI tools helped me write the base code quickly, but I had to double-check how it accessed python dataclasses versus standard dictionaries. I was surprised that basic addition and subtraction could still make the system "feel" like it was reading my mind. If I extended this project, I would add an automatic fallback feature to suggest songs from adjacent genres when an exact match is missing.
